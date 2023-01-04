@@ -1,3 +1,4 @@
+
 var taxRate = 0.00;
 var shipping = 0.00;
 var grandTotal = 0.00
@@ -43,11 +44,12 @@ $(function() {
   var html = "<tbody>";
   $.each(jsonData, function() {
     html +=
-      '<tr class="cart-item">' +
-      "        <td>" +
-      "        </td>" +
-      "        <td>" +
-      "          " +
+    '<tr class="cart-item">' +
+    "        <td>" +
+    '          <input type="checkbox" class="cart-item-check" checked />' +
+    "        </td>" +
+    "        <td>" +
+    "          " +
       this.title +
       "        </td>" +
       "        <td>$" +
