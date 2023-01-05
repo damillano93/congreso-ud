@@ -2,11 +2,12 @@
 var taxRate = 0.00;
 var shipping = 0.00;
 var grandTotal = 0.00
+var jsonData = []
 var WildRydes = window.WildRydes || {};
 WildRydes.map = WildRydes.map || {};
 
-$(function() {
-  var jsonData = [
+$(function () {
+  jsonData = [
     {
       title: "Item 1",
       price: 38,
@@ -45,14 +46,14 @@ $(function() {
     }
   ];
   var html = "<tbody>";
-  $.each(jsonData, function() {
+  $.each(jsonData, function () {
     html +=
-    '<tr class="cart-item">' +
-    "        <td>" +
-    '          <input type="checkbox" class="cart-item-check" checked />' +
-    "        </td>" +
-    "        <td>" +
-    "          " +
+      '<tr class="cart-item">' +
+      "        <td>" +
+      '          <input type="checkbox" class="cart-item-check" checked />' +
+      "        </td>" +
+      '        <td title="'+ this.title +'">' +
+      "          " +
       this.title +
       "        </td>" +
       "        <td>$" +
@@ -75,14 +76,14 @@ $(function() {
   });
   html += "</tbody>";
   $(".shopping-cart").append(html);
-  
+
   recalculateCart();
 
-  $(".cart-item-check").change(function() {
+  $(".cart-item-check").change(function () {
     recalculateCart();
   });
 
-  $(".cart-item-qty").change(function() {
+  $(".cart-item-qty").change(function () {
     var $this = $(this);
     var parent = $this.parent().parent();
     parent.find(".cart-item-check").prop("checked", "checked");
@@ -93,7 +94,7 @@ $(function() {
     recalculateCart();
   });
 
-  $(".button").click(function() {
+  $(".button").click(function () {
     var parent = $(this)
       .parent()
       .parent();
@@ -103,40 +104,38 @@ $(function() {
 });
 
 function saveResponse(paypalResponse) {
-let authToken =localStorage.getItem("token")
-  console.log(authToken)
+  let authToken = localStorage.getItem("token")
   $.ajax({
-      method: 'POST',
-      url: _config.api.invokeUrl + '/ride',
-      headers: {
-          Authorization: authToken
-      },
-      data: JSON.stringify({
-          PickupLocation: {
-              Latitude: 4.60971,
-              Longitude: -74.08175
-          }
-      }),
-      contentType: 'application/json',
-      success: completePayment(),
-      error: function ajaxError(jqXHR, textStatus, errorThrown) {
-          console.error('Error requesting ride: ', textStatus, ', Details: ', errorThrown);
-          console.error('Response: ', jqXHR.responseText);
-          alert('An error occured when requesting your unicorn:\n' + jqXHR.responseText);
+    method: 'POST',
+    url: _config.api.invokeUrl + '/ride',
+    headers: {
+      Authorization: authToken
+    },
+    data: JSON.stringify({
+      paypalResponse: paypalResponse,
+      orderDetail: {
+        shoppingCart: jsonData,
+        total: grandTotal
       }
+    }),
+    contentType: 'application/json',
+    success: completePayment(),
+    error: function ajaxError(jqXHR, textStatus, errorThrown) {
+      alert('An error occured when requesting your unicorn:\n' + jqXHR.responseText);
+    }
   });
 
-
-
 }
+
 function completePayment(result) {
-  console.log('Response received from API: ', result);
+  window.location.href = "success.html";
 }
+
 function recalculateCart() {
   var subTotal = 0;
   var tax = 0;
   var items = $(".cart-item");
-  $.each(items, function() {
+  $.each(items, function () {
     var itemCheck = $(this).find(".cart-item-check");
     var itemQuantity = $(this).find(".cart-item-qty");
     if (itemCheck.prop("checked")) {
@@ -159,36 +158,26 @@ function recalculateCart() {
 
 // Render the PayPal button into #paypal-button-container
 paypal
-.Buttons({
-  // Set up the transaction
-  createOrder: function (data, actions) {
-    return actions.order.create({
-      purchase_units: [
-        {
-          amount: {
-            value: grandTotal,
+  .Buttons({
+    // Set up the transaction
+    createOrder: function (data, actions) {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: grandTotal,
+            },
           },
-        },
-      ],
-    });
-  },
+        ],
+      });
+    },
 
-  // Finalize the transaction
-  onApprove: function (data, actions) {
-    return actions.order.capture().then(function (orderData) {
-      // Successful capture! For demo purposes:
-      console.log(
-        'Capture result',
-        orderData,
-        JSON.stringify(orderData, null, 2)
-      );
+    // Finalize the transaction
+    onApprove: function (data, actions) {
+      return actions.order.capture().then(function (orderData) {
         saveResponse(orderData)
-      // Replace the above to show a success message within this page, e.g.
-      // const element = document.getElementById('paypal-button-container');
-      // element.innerHTML = '';
-      // element.innerHTML = '<h3>Thank you for your payment!</h3>';
-      // Or go to another URL:  actions.redirect('thank_you.html');
-    });
-  },
-})
-.render('#paypal-button-container');
+actions.redirect('success.html');
+      });
+    },
+  })
+  .render('#paypal-button-container');
