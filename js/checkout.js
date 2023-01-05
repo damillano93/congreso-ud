@@ -2,6 +2,9 @@
 var taxRate = 0.00;
 var shipping = 0.00;
 var grandTotal = 0.00
+var WildRydes = window.WildRydes || {};
+WildRydes.map = WildRydes.map || {};
+
 $(function() {
   var jsonData = [
     {
@@ -98,6 +101,37 @@ $(function() {
     recalculateCart();
   });
 });
+
+function saveResponse(paypalResponse) {
+let authToken =localStorage.getItem("token")
+  console.log(authToken)
+  $.ajax({
+      method: 'POST',
+      url: _config.api.invokeUrl + '/ride',
+      headers: {
+          Authorization: authToken
+      },
+      data: JSON.stringify({
+          PickupLocation: {
+              Latitude: 4.60971,
+              Longitude: -74.08175
+          }
+      }),
+      contentType: 'application/json',
+      success: completePayment(),
+      error: function ajaxError(jqXHR, textStatus, errorThrown) {
+          console.error('Error requesting ride: ', textStatus, ', Details: ', errorThrown);
+          console.error('Response: ', jqXHR.responseText);
+          alert('An error occured when requesting your unicorn:\n' + jqXHR.responseText);
+      }
+  });
+
+
+
+}
+function completePayment(result) {
+  console.log('Response received from API: ', result);
+}
 function recalculateCart() {
   var subTotal = 0;
   var tax = 0;
@@ -148,16 +182,7 @@ paypal
         orderData,
         JSON.stringify(orderData, null, 2)
       );
-      var transaction =
-        orderData.purchase_units[0].payments.captures[0];
-      alert(
-        'Transaction ' +
-        transaction.status +
-        ': ' +
-        transaction.id +
-        '\n\nSee console for all available details'
-      );
-
+        saveResponse(orderData)
       // Replace the above to show a success message within this page, e.g.
       // const element = document.getElementById('paypal-button-container');
       // element.innerHTML = '';

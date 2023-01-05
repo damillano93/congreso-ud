@@ -4,10 +4,12 @@ var WildRydes = window.WildRydes || {};
 WildRydes.map = WildRydes.map || {};
 
 (function rideScopeWrapper($) {
+
     var authToken;
     WildRydes.authToken.then(function setAuthToken(token) {
         if (token) {
             authToken = token;
+            localStorage.setItem("token", token)
         } else {
             window.location.href = '/signin.html';
         }
@@ -104,4 +106,6 @@ WildRydes.map = WildRydes.map || {};
     function displayUpdate(text) {
         $('#updates').append($('<li>' + text + '</li>'));
     }
+
+    
 }(jQuery));
